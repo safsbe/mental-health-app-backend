@@ -83,7 +83,8 @@ CREATE TABLE "articles" (
 CREATE TABLE "article_pages" (
   "article_id" integer,
   "page_index" integer NOT NULL,
-  "content" varchar NOT NULL,
+  "title" varchar NOT NULL,
+  "body" varchar NOT NULL,
   "created_at" timestamp NOT NULL DEFAULT 'now()',
   "updated_at" timestamp NOT NULL DEFAULT 'now()',
   PRIMARY KEY ("article_id", "page_index")
@@ -132,6 +133,25 @@ CREATE TABLE "quotes" (
   "created_at" timestamp NOT NULL DEFAULT 'now()',
   "quote" varchar UNIQUE NOT NULL
 );
+
+CREATE TABLE "feedback" (
+  "id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  "public_id" uuid NOT NULL DEFAULT gen_random_uuid(),
+  "category_id" integer NOT NULL,
+  "author_id" integer NOT NULL,
+  "created_at" timestamp NOT NULL DEFAULT 'now()'
+);
+
+CREATE TABLE "feedback_categories" (
+  "id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  "public_id" uuid NOT NULL DEFAULT gen_random_uuid(),
+  "title" varchar UNIQUE NOT NULL
+);
+
+ALTER TABLE "feedback" ADD FOREIGN KEY ("author_id") REFERENCES "users" ("id");
+ALTER TABLE "feedback" ADD FOREIGN KEY ("category_id") REFERENCES "feedback_categories" ("id");
+
+-- -----
 
 ALTER TABLE "users_article_reads" ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id");
 

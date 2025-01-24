@@ -14,3 +14,5 @@ VALUES (1, 1, 'Article 1 Page 1'),
 INSERT INTO "meditation_tracks" ("title", "file_location")
 VALUES ('Meditation Track 1', 'https://blob.dev.lumin.itserv.com.sg/364b8206-b24d-406e-9ae8-8e0ab90e013a');
  
+INSERT INTO "diary_entries" ("user_id", "entry_date", "mood", "tags")
+VALUES (1, '2024-01-01', 5, ARRAY ['foo', 'bar']);
