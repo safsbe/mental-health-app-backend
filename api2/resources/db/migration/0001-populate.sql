@@ -7,7 +7,7 @@ VALUES ('Category 1', 'https://blob.dev.lumin.itserv.com.sg/c82210cb-3a7c-4b24-9
 INSERT INTO "articles" ("category_id", "title", "creator_id", "updater_id")
 VALUES (1, 'Article 1', 1, 1);
 
-INSERT INTO "article_pages" ("article_id", "page_index", "content")
+INSERT INTO "article_pages" ("article_id", "page_index", "body")
 VALUES (1, 1, 'Article 1 Page 1'),
        (1, 2, 'Article 1 Page 2');
 
