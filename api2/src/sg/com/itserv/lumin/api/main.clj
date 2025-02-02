@@ -221,21 +221,20 @@ AND
                  :responses {200 nil}}}]]]]]
           ["/diary/entries"
            {:openapi {:tags ["diary"]}}
-           ["/"
+           [""
             {:get
              {:handler (fn [_]
-                         {:status 200
-                          :body {}})
-              :responses {200 {:body [:vector [:map
-                                               [:moodRating :int]
-                                               [:significantEvents [:vector :string]]
-                                               [:momentBest [:vector :string]]
-                                               [:momentWorst [:vector :string]]
-                                               [:whatHelped [:vector :string]]
-                                               [:medicationTaken [:vector :string]]
-                                               [:sleepStart :string]
-                                               [:sleepEnd :string]
-                                               [:tags [:vector :string]]]]}}}}]
+                         (->> (-> (select :entry_date)
+                                  (from :diary_entries)
+                                  (where [:= :user_id 1])
+                                  (sql/format))
+                              (jdbc/execute! connection)
+                              (mapv #(:diary_entries/entry_date %))
+                              (mapv #(.format (java.text.SimpleDateFormat. "yyyy/MM/dd") %))
+                              ((fn [x]
+                                {:status 200
+                                 :body x}))))
+              :responses {200 {:body [:vector :string]}}}}]
            ["/:date"
             {:get
              {:handler (fn [_]
@@ -254,17 +253,17 @@ AND
                                   (where [:= :user_id 1])
                                   (sql/format))
                               (jdbc/execute! connection)
-                              (map #(rename-keys % {:diary_entries/:mood :mood
-                                                    :diary_entries/:significant_events :significantEvents
-                                                    :diary_entries/:moment_best :momentBest
-                                                    :diary_entries/:moment_worst :momentWorst
-                                                    :diary_entries/:what_happened :whatHappened
-                                                    :diary_entries/:medicine_taken :medicineTaken
-                                                    :diary_entries/:nap_count :napCount
-                                                    :diary_entries/:nap_duration_total_hrs :napDurationTotalHrs
-                                                    :diary_entries/:sleep_start_at :sleepStartAt
-                                                    :diary_entries/:sleep_end_at :sleepEndAt
-                                                    :diary_entries/:tags :tags}))
+                              (map #(rename-keys % {:diary_entries/mood :mood
+                                                    :diary_entries/significant_events :significantEvents
+                                                    :diary_entries/moment_best :momentBest
+                                                    :diary_entries/moment_worst :momentWorst
+                                                    :diary_entries/what_happened :whatHappened
+                                                    :diary_entries/medicine_taken :medicineTaken
+                                                    :diary_entries/nap_count :napCount
+                                                    :diary_entries/nap_duration_total_hrs :napDurationTotalHrs
+                                                    :diary_entries/sleep_start_at :sleepStartAt
+                                                    :diary_entries/sleep_end_at :sleepEndAt
+                                                    :diary_entries/tags :tags}))
                               ((fn [x]
                                  (println x)
                                  (if (> (count x) 0)
@@ -320,7 +319,8 @@ AND
               {:responses {200 {:body [:vector
                                        [:map
                                         [:id :uuid]
-                                        [:title :string]]]}}
+                                        [:title :string]
+                                        [:downloadUrl :string]]]}}
                :handler (fn [_]
                           (->> (-> (select :public_id :title :download_url)
                                    (from :meditation_tracks)
