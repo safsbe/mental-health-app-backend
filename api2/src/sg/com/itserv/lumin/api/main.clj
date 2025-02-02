@@ -48,7 +48,7 @@
       (io/resource)
       (slurp)
       (as-> x (jdbc/execute! connection [x])))
-  (-> "db/migration/0001-populate.sql.sql"
+  (-> "db/migration/0001-populate.sql"
       (io/resource)
       (slurp)
       (as-> x (jdbc/execute! connection [x])))

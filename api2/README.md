@@ -17,7 +17,7 @@
     $ podman run \
       --name postgres-test \
       -e POSTGRES_PASSWORD=Password123 \
-      -e 5432:5432 \
+      -p 5432:5432 \
       -d \
       docker.io/library/postgres:17
     ```
