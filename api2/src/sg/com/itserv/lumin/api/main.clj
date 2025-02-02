@@ -48,6 +48,10 @@
       (io/resource)
       (slurp)
       (as-> x (jdbc/execute! connection [x])))
+  (-> "db/migration/0001-populate.sql.sql"
+      (io/resource)
+      (slurp)
+      (as-> x (jdbc/execute! connection [x])))
   (println (jdbc/execute! connection ["
 SELECT
     table_schema || '.' || table_name
