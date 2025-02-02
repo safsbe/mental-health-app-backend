@@ -382,12 +382,13 @@ AND
           :config {:validatorUrl nil}})
         (ring/create-default-handler))))
 
-(defn- dev [_]
-  (drop-schema datasource)
-  (migrate datasource)
-  (main))
-
 (defn- main [_]
   (let [handler (create-handler datasource)]
   ; (migrate datasource)
     (jetty/run-jetty handler {:port 8080 :join? true})))
+
+
+(defn- dev [_]
+  (drop-schema datasource)
+  (migrate datasource)
+  (main nil))
