@@ -16,7 +16,9 @@
             [reitit.swagger-ui :as swagger-ui]
             [ring.adapter.jetty :as jetty]
             [honey.sql :as sql]
-            [honey.sql.helpers :refer [select from where right-join]]))
+            [honey.sql.helpers :refer [select from where right-join insert-into columns values]]
+            [buddy.auth.backends :as backends]
+            [buddy.auth.middleware :refer [wrap-authentication]]))
 
 
 (extend-protocol rs/ReadableColumn
@@ -34,8 +36,14 @@
 
 (def ^:private datasource (jdbc/get-datasource datasource-config))
 
+(defn- drop-schema [connection]
+  (-> "db/migration/0000-drop.sql"
+      (io/resource)
+      (slurp)
+      (as-> x (jdbc/execute! connection [x]))))
+
 (defn- migrate [connection]
-  (println (slurp (io/resource "db/migration/0001.sql")))
+;  (println (slurp (io/resource "db/migration/0001.sql")))
   (-> "db/migration/0001.sql"
       (io/resource)
       (slurp)
@@ -266,7 +274,7 @@ AND
                           400 nil}}
              :post
              {:handler (fn [{:keys [body-params path-params] :as _req}]
-                         (->> (#(rename-keys % {:mood :mood
+                         (-> (rename-keys {:mood :mood
                                                 :significantEvents :significant_events
                                                 :momentBest :moment_best
                                                 :momentWorst :moment_worst
@@ -276,7 +284,7 @@ AND
                                                 :napDurationTotalHrs :nap_duration_total_hrs
                                                 :sleepStartAt :sleep_start_at
                                                 :sleepEndAt :sleep_end_at
-                                                :tags :tags}))
+                                                :tags :tags})
                               (as-> x
                                 (insert-into :diary_entries)
                                 (columns :mood
@@ -297,7 +305,7 @@ AND
                                                           (where [:= :idp_id "0001"]))]]
                                         [:= :entry_date (:date path-params)]])
                                 (sql/format))
-                              (jdbc/execute! connection)))
+                              (#(jdbc/execute! connection %))))
               :parameters {:path [:map [:date :string]]}
               :responses {200 nil}}}]]
           ["/meditations"
@@ -332,7 +340,7 @@ AND
                                            (from :users)
                                            (where [:= "0001" :idp_id]))
                                        (:id path-params)
-                                       (now))
+                                       (java.util.Date.))
                                (sql/format)))
                 :parameters {:body [:map
                                     [:listenedAt :string]
@@ -360,13 +368,20 @@ AND
                              muuntaja/format-request-middleware
                              coercion/coerce-response-middleware
                              coercion/coerce-request-middleware
-                             multipart/multipart-middleware]}})
+                             multipart/multipart-middleware
+;                             (wrap-authentication (backends/jws {:secret "my-secret"}))
+                             ]}})
        (ring/routes
         (swagger-ui/create-swagger-ui-handler
          {:path "/swagger-ui"
           :url ["/openapi.json"]
           :config {:validatorUrl nil}})
         (ring/create-default-handler))))
+
+(defn- dev [_]
+  (drop-schema datasource)
+  (migrate datasource)
+  (main))
 
 (defn- main [_]
   (let [handler (create-handler datasource)]
